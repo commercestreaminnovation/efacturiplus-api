@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: eFacturiPlus API
-  version: 1.0.0
-  description: Facturare și e-Factura (SPV) în România.
+  version: 1.1.0
+  description: Facturare și e-Factura (SPV) în România. Documentație în docs/, biblioteci în sdks/.
   license: {name: MIT, url: https://opensource.org/licenses/MIT}
   contact: {name: eFacturiPlus, url: https://www.efacturiplus.ro}
 servers:
@@ -38,13 +38,14 @@ paths:
         - {name: invoice_id, in: query, schema: {type: integer}}
         - {name: serie, in: query, schema: {type: string}, description: Împreună cu numar}
         - {name: numar, in: query, schema: {type: integer}}
+        - {name: cui, in: query, schema: {type: string}, description: Obligatoriu cu serie și numar, doar pentru cheile de partener}
       responses:
         '200': {description: Factura, content: {application/json: {schema: {$ref: '#/components/schemas/Invoice'}}}}
         '404': {$ref: '#/components/responses/Error'}
   /facturi/{invoice}/spv:
     post:
       summary: Pune factura în coada de trimitere la ANAF
-      description: Trimiterea nu se poate retrage. Factura pleacă în cel mult un minut.
+      description: Trimiterea nu se poate retrage. Factura pleacă de obicei în cel mult 20 de minute.
       parameters: [{$ref: '#/components/parameters/invoice'}]
       responses:
         '200': {description: Starea facturii, content: {application/json: {schema: {$ref: '#/components/schemas/Invoice'}}}}
@@ -60,11 +61,51 @@ paths:
         '200': {description: Era deja stornată, content: {application/json: {schema: {$ref: '#/components/schemas/Invoice'}}}}
         '404': {$ref: '#/components/responses/Error'}
         '409': {$ref: '#/components/responses/Error'}
+  /facturi/{invoice}/pdf:
+    get:
+      summary: PDF-ul facturii, prin linkul semnat din pdf_url
+      security: []
+      parameters:
+        - {$ref: '#/components/parameters/invoice'}
+        - {name: exp, in: query, required: true, schema: {type: integer}}
+        - {name: sig, in: query, required: true, schema: {type: string}}
+      responses:
+        '200': {description: PDF, content: {application/pdf: {schema: {type: string, format: binary}}}}
+        '403': {description: Link expirat sau invalid}
+        '404': {description: Nu există sau e proiect}
+  /conturi:
+    post:
+      summary: Deschide un cont pentru o firmă (cheie de partener)
+      requestBody:
+        required: true
+        content: {application/json: {schema: {$ref: '#/components/schemas/AccountRequest'}}}
+      responses:
+        '201': {description: Cont creat, content: {application/json: {schema: {$ref: '#/components/schemas/PartnerAccount'}}}}
+        '200': {description: Firma avea deja cont (existing true), content: {application/json: {schema: {$ref: '#/components/schemas/PartnerAccount'}}}}
+        '403': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+        '422': {$ref: '#/components/responses/Error'}
+  /conturi/{cui}:
+    get:
+      summary: Starea contului unei firme legate (cheie de partener)
+      parameters: [{$ref: '#/components/parameters/cui'}]
+      responses:
+        '200': {description: Contul, content: {application/json: {schema: {$ref: '#/components/schemas/PartnerAccount'}}}}
+        '404': {$ref: '#/components/responses/Error'}
+  /conturi/{cui}/activare:
+    post:
+      summary: Link de activare nou (cheie de partener)
+      parameters: [{$ref: '#/components/parameters/cui'}]
+      responses:
+        '200': {description: Link nou, content: {application/json: {schema: {$ref: '#/components/schemas/PartnerAccount'}}}}
+        '404': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
 components:
   securitySchemes:
     apiKey: {type: apiKey, in: header, name: X-Api-Key}
   parameters:
     invoice: {name: invoice, in: path, required: true, schema: {type: integer}}
+    cui: {name: cui, in: path, required: true, schema: {type: string}}
   responses:
     Error:
       description: Eroare
@@ -78,6 +119,41 @@ components:
         code: {type: string, example: invalid_vat}
         message: {type: string}
         errors: {type: object, additionalProperties: {type: array, items: {type: string}}}
+    AccountRequest:
+      type: object
+      required: [cui, name, email, firstname]
+      properties:
+        cui: {type: string}
+        name: {type: string}
+        reg_com: {type: string}
+        address: {type: string}
+        loc: {type: string}
+        jud: {type: string}
+        email: {type: string, format: email}
+        phone: {type: string}
+        firstname: {type: string}
+        lastname: {type: string}
+        platitor_tva: {type: boolean}
+        partner_ref: {type: string}
+    PartnerAccount:
+      type: object
+      properties:
+        success: {type: boolean}
+        existing: {type: boolean}
+        message: {type: string}
+        company_id: {type: integer}
+        admin_id: {type: integer}
+        partner_ref: {type: string, nullable: true}
+        account:
+          type: object
+          properties:
+            state: {type: string, enum: [neactivat, fara_abonament, activ, expirat]}
+            created_by_partner: {type: boolean}
+            allow_invoices: {type: boolean}
+            activated_at: {type: string, format: date-time, nullable: true}
+            expires_at: {type: string, format: date, nullable: true}
+        activation_url: {type: string, nullable: true}
+        activation_expires_at: {type: string, format: date-time, nullable: true}
     Account:
       type: object
       properties:
@@ -133,6 +209,8 @@ components:
         customer_postcode: {type: string}
         customer_email: {type: string, format: email}
         customer_telephone: {type: string, maxLength: 20}
+        customer_bank_name: {type: string, maxLength: 255}
+        customer_bank_account: {type: string, maxLength: 100}
         pret_fara_tva: {type: boolean, default: false}
         mentiuni: {type: string, maxLength: 1000}
         draft: {type: boolean, description: Rămâne proiect; titularul îl confirmă din aplicație}

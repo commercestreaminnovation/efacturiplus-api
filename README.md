@@ -2,10 +2,26 @@
 
 API public pentru facturare și e-Factura (SPV) în România. Îl folosesc modulele de magazin de aici și îl poți folosi din orice program.
 
+- **Documentație:** [`docs/`](docs/README.md): cum funcționează, ghid de integrare, toate câmpurile, erori, webhook
 - **Specificație OpenAPI:** [`openapi.yaml`](openapi.yaml)
-- **Exemple:** [`examples/`](examples)
-- **Module:** [WooCommerce](modules/woocommerce/efacturiplus), [PrestaShop](modules/prestashop/efacturiplus), [client PHP și Laravel](modules/php-sdk)
+- **Module de magazin:** [WooCommerce](modules/woocommerce/efacturiplus), [PrestaShop](modules/prestashop/efacturiplus)
 - **Serviciul:** [efacturiplus.ro](https://www.efacturiplus.ro)
+
+## Biblioteci
+
+Toate au aceleași funcții: emitere, citire, SPV, stornare, PDF, webhook, reîncercări sigure. Nu au alte dependențe.
+
+| Limbaj | Cerințe | Ghid |
+|---|---|---|
+| PHP și Laravel | PHP 8.1+ | [`sdks/php`](sdks/php) |
+| JavaScript și TypeScript | Node.js 18+ | [`sdks/javascript`](sdks/javascript) |
+| Python | 3.9+ | [`sdks/python`](sdks/python) |
+| Java | 11+ | [`sdks/java`](sdks/java) |
+| C# / .NET | .NET 8+ | [`sdks/csharp`](sdks/csharp) |
+| Go | 1.21+ | [`sdks/go`](sdks/go) |
+| Ruby | 3.0+ | [`sdks/ruby`](sdks/ruby) |
+
+Alt limbaj? API-ul e HTTP și JSON simplu, iar din [`openapi.yaml`](openapi.yaml) poți genera un client. Testul comun al bibliotecilor e în [`tests/`](tests).
 
 ## Pornire în 3 pași
 
@@ -32,6 +48,8 @@ curl https://www.efacturiplus.ro/app/api/parteneri/v1/facturi \
 ```
 
 Adresa de bază: `https://www.efacturiplus.ro/app/api/parteneri/v1`
+
+Fișierul PDF, starea și toate câmpurile sunt explicate în [referința API](docs/referinta-api.md). Dacă e prima integrare, începe cu [ghidul](docs/ghid-integrare.md).
 
 ## Reguli pe scurt
 
@@ -67,7 +85,7 @@ Răspunsurile de eroare au `success: false`, `code` (stabil) și `message` (pent
 
 Dacă treci o adresă `https://` publică, pe portul 443, la crearea cheii, primești `POST` când se schimbă starea unei facturi (`factura.actualizata`).
 Antetul `X-Signature: t=<unix>,v1=<hex>`, unde `v1 = HMAC-SHA256(secret, "<t>.<corpul cererii>")`.
-Răspunde cu 2xx. Altfel reîncercăm de până la 10 ori. Același `id` poate veni de două ori. Exemplu de verificare: [`examples/webhook.php`](examples/webhook.php).
+Răspunde cu 2xx. Altfel reîncercăm de până la 10 ori. Același `id` poate veni de două ori. Detalii: [docs/webhook.md](docs/webhook.md).
 
 ## Securitate
 
@@ -75,7 +93,7 @@ Raportează vulnerabilitățile conform [SECURITY.md](SECURITY.md), nu într-un 
 
 ## Licențe
 
-Documentația și exemplele: MIT. Modulul WooCommerce: GPL-2.0-or-later. Modulul PrestaShop: MIT.
+Documentația, exemplele și bibliotecile: MIT. Modulul WooCommerce: GPL-2.0-or-later. Modulul PrestaShop: MIT.
 Serviciul eFacturiPlus se folosește conform [termenilor](https://www.efacturiplus.ro/app/site/termeni).
 
 Întrebări și erori: [Issues](../../issues).

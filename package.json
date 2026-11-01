@@ -1,0 +1,22 @@
+{
+  "name": "efacturiplus",
+  "version": "1.0.0",
+  "description": "Client pentru API-ul public eFacturiPlus: facturare si e-Factura (SPV)",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "sdks/javascript/src/index.mjs",
+  "types": "sdks/javascript/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./sdks/javascript/src/index.d.ts",
+      "import": "./sdks/javascript/src/index.mjs"
+    }
+  },
+  "files": [
+    "sdks/javascript/src"
+  ],
+  "repository": "github:commercestreaminnovation/efacturiplus-api"
+}

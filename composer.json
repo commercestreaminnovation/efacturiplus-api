@@ -1,0 +1,26 @@
+{
+    "name": "commercestreaminnovation/efacturiplus",
+    "description": "Client PHP pentru API-ul public eFacturiPlus: facturare si e-Factura (SPV)",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.1",
+        "ext-curl": "*",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "EFacturiPlus\\": "sdks/php/src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "EFacturiPlus\\EFacturiPlusServiceProvider"
+            ],
+            "aliases": {
+                "EFacturiPlus": "EFacturiPlus\\Facade"
+            }
+        }
+    }
+}
