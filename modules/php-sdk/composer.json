@@ -1,0 +1,11 @@
+{
+    "name": "commercestreaminnovation/efacturiplus",
+    "description": "Client PHP și Laravel pentru API-ul eFacturiPlus: facturi, stornări, e-Factura (SPV).",
+    "keywords": ["laravel", "efacturiplus", "factura", "romania", "anaf", "e-factura", "spv"],
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://www.efacturiplus.ro",
+    "require": {"php": "^8.0", "ext-curl": "*", "ext-json": "*"},
+    "autoload": {"psr-4": {"EFacturiPlus\\": "src/"}},
+    "extra": {"laravel": {"providers": ["EFacturiPlus\\EFacturiPlusServiceProvider"], "aliases": {"EFacturiPlus": "EFacturiPlus\\Facade"}}}
+}

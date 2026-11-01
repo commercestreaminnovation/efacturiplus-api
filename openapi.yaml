@@ -1,0 +1,165 @@
+openapi: 3.0.3
+info:
+  title: eFacturiPlus API
+  version: 1.0.0
+  description: Facturare și e-Factura (SPV) în România.
+  license: {name: MIT, url: https://opensource.org/licenses/MIT}
+  contact: {name: eFacturiPlus, url: https://www.efacturiplus.ro}
+servers:
+  - url: https://www.efacturiplus.ro/app/api/parteneri/v1
+security:
+  - apiKey: []
+paths:
+  /cont:
+    get:
+      summary: Firma cheii, starea contului, seriile și SPV
+      responses:
+        '200': {description: Datele firmei, content: {application/json: {schema: {$ref: '#/components/schemas/Account'}}}}
+        '400': {$ref: '#/components/responses/Error'}
+        '401': {$ref: '#/components/responses/Error'}
+  /facturi:
+    post:
+      summary: Creează o factură
+      requestBody:
+        required: true
+        content: {application/json: {schema: {$ref: '#/components/schemas/InvoiceRequest'}}}
+      responses:
+        '201': {description: Factură creată, content: {application/json: {schema: {$ref: '#/components/schemas/Invoice'}}}}
+        '200': {description: Factura există deja (duplicate true), content: {application/json: {schema: {$ref: '#/components/schemas/Invoice'}}}}
+        '401': {$ref: '#/components/responses/Error'}
+        '402': {$ref: '#/components/responses/Error'}
+        '403': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+        '422': {$ref: '#/components/responses/Error'}
+    get:
+      summary: Starea unei facturi, cu link PDF nou
+      parameters:
+        - {name: invoice_id, in: query, schema: {type: integer}}
+        - {name: serie, in: query, schema: {type: string}, description: Împreună cu numar}
+        - {name: numar, in: query, schema: {type: integer}}
+      responses:
+        '200': {description: Factura, content: {application/json: {schema: {$ref: '#/components/schemas/Invoice'}}}}
+        '404': {$ref: '#/components/responses/Error'}
+  /facturi/{invoice}/spv:
+    post:
+      summary: Pune factura în coada de trimitere la ANAF
+      description: Trimiterea nu se poate retrage. Factura pleacă în cel mult un minut.
+      parameters: [{$ref: '#/components/parameters/invoice'}]
+      responses:
+        '200': {description: Starea facturii, content: {application/json: {schema: {$ref: '#/components/schemas/Invoice'}}}}
+        '404': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+  /facturi/{invoice}/storno:
+    post:
+      summary: Stornează integral o factură
+      description: A doua cerere întoarce aceeași stornare, cu duplicate true. Stornarea trebuie trimisă separat în SPV.
+      parameters: [{$ref: '#/components/parameters/invoice'}]
+      responses:
+        '201': {description: Factura de stornare, content: {application/json: {schema: {$ref: '#/components/schemas/Invoice'}}}}
+        '200': {description: Era deja stornată, content: {application/json: {schema: {$ref: '#/components/schemas/Invoice'}}}}
+        '404': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+components:
+  securitySchemes:
+    apiKey: {type: apiKey, in: header, name: X-Api-Key}
+  parameters:
+    invoice: {name: invoice, in: path, required: true, schema: {type: integer}}
+  responses:
+    Error:
+      description: Eroare
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+  schemas:
+    Error:
+      type: object
+      required: [success, code, message]
+      properties:
+        success: {type: boolean, example: false}
+        code: {type: string, example: invalid_vat}
+        message: {type: string}
+        errors: {type: object, additionalProperties: {type: array, items: {type: string}}}
+    Account:
+      type: object
+      properties:
+        success: {type: boolean}
+        company:
+          type: object
+          properties:
+            company_id: {type: integer}
+            name: {type: string}
+            cui: {type: string}
+            platitor_tva: {type: boolean}
+        account:
+          type: object
+          properties:
+            state: {type: string, enum: [activ, expirat, fara_abonament]}
+            can_invoice: {type: boolean}
+            expires_at: {type: string, format: date, nullable: true}
+        spv:
+          type: object
+          properties:
+            connected: {type: boolean}
+            auto_send: {type: boolean}
+        series: {type: array, items: {type: string}}
+        vat_rates: {type: array, items: {type: integer}, example: [21, 11]}
+    Line:
+      type: object
+      required: [name, quantity, price]
+      properties:
+        name: {type: string, maxLength: 255}
+        quantity: {type: number, description: Diferită de 0. Negativă pentru reduceri}
+        price: {type: number, minimum: 0, description: Preț unitar cu TVA, afară de pret_fara_tva}
+        cota_tva: {type: number, description: 21 sau 11; 0 pentru neplătitori}
+        um: {type: string, maxLength: 25, default: buc}
+        mentions: {type: string, maxLength: 255}
+    InvoiceRequest:
+      type: object
+      required: [serie_factura, data_factura, products]
+      properties:
+        Codul fiscal: {type: string, description: CUI-ul emitentului. Opțional cu cheia unei firme}
+        serie_factura: {type: string, maxLength: 20, pattern: '^[A-Za-z0-9\-/]+$'}
+        numar_facura: {type: integer, description: Lipsește - următorul număr din serie}
+        data_factura: {type: string, format: date}
+        scadenta_date: {type: string, format: date}
+        currency_name: {type: string, default: RON}
+        external_id: {type: string, maxLength: 64, description: Id-ul din programul tău; previne dublurile}
+        customer_name: {type: string}
+        customer_cui: {type: string, description: Gol pentru persoane fizice}
+        customer_reg_com: {type: string, maxLength: 20}
+        customer_address: {type: string}
+        customer_loc: {type: string}
+        customer_jud: {type: string}
+        customer_country: {type: string, description: Cod ISO cu 2 litere sau numele țării. Implicit România}
+        customer_postcode: {type: string}
+        customer_email: {type: string}
+        customer_telephone: {type: string, maxLength: 20}
+        pret_fara_tva: {type: boolean, default: false}
+        mentiuni: {type: string, maxLength: 1000}
+        draft: {type: boolean, description: Rămâne proiect; titularul îl confirmă din aplicație}
+        products: {type: array, minItems: 1, maxItems: 500, items: {$ref: '#/components/schemas/Line'}}
+    Invoice:
+      type: object
+      properties:
+        success: {type: boolean}
+        duplicate: {type: boolean}
+        message: {type: string}
+        invoice_id: {type: integer}
+        invoice:
+          type: object
+          properties:
+            serie: {type: string}
+            numar: {type: integer, nullable: true}
+            label: {type: string, nullable: true}
+            status: {type: string, enum: [ciorna, emisa, incasata_partial, incasata, anulata]}
+            data: {type: string, format: date}
+            scadenta: {type: string, format: date, nullable: true}
+            total: {type: number}
+            tva: {type: number}
+        efactura_status: {type: string, enum: [netrimisa, in_asteptare, in_prelucrare, acceptata, respinsa, trimisa, eroare_trimitere]}
+        efactura:
+          type: object
+          properties:
+            status: {type: string}
+            label: {type: string}
+            index_incarcare: {type: string, nullable: true}
+            errors: {type: array, items: {type: string}}
+        pdf_url: {type: string, nullable: true, description: Link semnat, valabil 24 de ore}
