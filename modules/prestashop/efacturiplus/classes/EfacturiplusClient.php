@@ -52,7 +52,10 @@ class EfacturiplusClient
             CURLOPT_CUSTOMREQUEST => $method,
             CURLOPT_TIMEOUT => 20,
             CURLOPT_CONNECTTIMEOUT => 8,
-            CURLOPT_HTTPHEADER => ['X-Api-Key: ' . $key, 'Accept: application/json', 'Content-Type: application/json', 'User-Agent: eFacturiPlus-PrestaShop/3.0.0'],
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_HTTPHEADER => ['X-Api-Key: ' . $key, 'Accept: application/json', 'Content-Type: application/json', 'User-Agent: eFacturiPlus-PrestaShop/3.0.1'],
         ]);
         if ($body !== null) {
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode((object) $body));

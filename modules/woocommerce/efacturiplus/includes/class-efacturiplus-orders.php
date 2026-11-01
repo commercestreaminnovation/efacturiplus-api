@@ -24,6 +24,8 @@ class EFacturiPlus_Orders {
 		$status = (string) get_option( 'efacturiplus_trigger_status', 'processing' );
 		if ( 'manual' !== $status ) {
 			add_action( 'woocommerce_order_status_' . $status, array( __CLASS__, 'schedule' ) );
+			// Comenzile ramburs, transfer sau cec se factureaza abia la finalizare.
+			add_action( 'woocommerce_order_status_completed', array( __CLASS__, 'schedule' ) );
 		}
 		add_action( self::ACTION, array( __CLASS__, 'issue' ), 10, 2 );
 		add_action( 'woocommerce_order_fully_refunded', array( __CLASS__, 'on_refund' ) );
@@ -42,6 +44,11 @@ class EFacturiPlus_Orders {
 	public static function schedule( $order_id ) {
 		$order = wc_get_order( $order_id );
 		if ( ! $order || $order->get_meta( '_efacturiplus_invoice_id' ) ) {
+			return;
+		}
+		// A cash-on-delivery order reaches "processing" without any payment, so anyone could otherwise generate fiscal documents.
+		if ( 'processing' === $order->get_status() && in_array( $order->get_payment_method(), array( 'cod', 'cheque', 'bacs' ), true ) ) {
+			$order->add_order_note( __( 'Plata nu e confirmată: factura se emite la finalizarea comenzii sau manual.', 'efacturiplus' ) );
 			return;
 		}
 		if ( function_exists( 'as_enqueue_async_action' ) ) {
@@ -261,7 +268,7 @@ class EFacturiPlus_Orders {
 			wp_die( esc_html__( 'Nu ai dreptul să faci această acțiune.', 'efacturiplus' ), 403 );
 		}
 		$order = wc_get_order( $order_id );
-		if ( ! $order ) {
+		if ( ! $order || ! in_array( $task, array( 'issue', 'storno', 'spv', 'spv_storno', 'refresh', 'pdf' ), true ) ) {
 			wp_die( esc_html__( 'Comanda nu există.', 'efacturiplus' ), 404 );
 		}
 
@@ -321,8 +328,9 @@ class EFacturiPlus_Orders {
 		if ( ! $result['ok'] || empty( $result['body']['pdf_url'] ) ) {
 			wp_die( esc_html__( 'Factura nu este disponibilă acum.', 'efacturiplus' ) );
 		}
+		$url = esc_url_raw( (string) $result['body']['pdf_url'], array( 'https', 'http' ) );
 		// phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- The PDF is hosted by the eFacturiPlus API.
-		wp_redirect( esc_url_raw( $result['body']['pdf_url'] ) );
+		wp_redirect( $url );
 		exit;
 	}
 
@@ -361,7 +369,7 @@ class EFacturiPlus_Orders {
 		$order_id = isset( $_GET['order'] ) ? absint( $_GET['order'] ) : 0;
 		check_admin_referer( 'efacturiplus_pdf_' . $order_id );
 		$order = wc_get_order( $order_id );
-		if ( ! $order || ! current_user_can( 'view_order', $order_id ) ) {
+		if ( ! $order || ! ( current_user_can( 'view_order', $order_id ) || current_user_can( 'edit_shop_orders' ) ) ) {
 			wp_die( esc_html__( 'Nu ai dreptul să vezi această factură.', 'efacturiplus' ), 403 );
 		}
 		self::redirect_to_pdf( $order );

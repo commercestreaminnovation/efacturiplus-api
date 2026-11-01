@@ -4,7 +4,7 @@ Tags: woocommerce, invoice, e-factura, anaf, romania
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 3.0.0
+Stable tag: 3.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -20,6 +20,7 @@ Romanian VAT-registered and non-registered businesses must report their invoices
 * adds company fields (tax code, trade register number) to the block and classic checkouts;
 * keeps VAT rates, coupons, fees and shipping, so the invoice total equals the order total;
 * never creates the same invoice twice;
+* waits for confirmed payment: cash on delivery, cheque and bank transfer orders are invoiced when completed;
 * sends the invoice to SPV, automatically or with one click, and shows the SPV state on the order;
 * lets you reverse (storno) an invoice from the order;
 * gives customers the PDF in My Account;
@@ -65,6 +66,11 @@ eFacturiPlus gives the next number in the series, so numbering stays continuous.
 The plugin retries for about two hours. After that the order shows the error and you can issue the invoice with one click.
 
 == Changelog ==
+
+= 3.0.1 =
+* Security: the API key is no longer printed in the settings page.
+* Security: orders without confirmed payment no longer trigger an invoice automatically.
+* Checkout data is sanitized before it is sent.
 
 = 3.0.0 =
 * Rewritten for the public eFacturiPlus API, with per-company keys.

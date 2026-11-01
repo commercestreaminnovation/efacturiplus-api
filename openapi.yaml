@@ -31,6 +31,7 @@ paths:
         '403': {$ref: '#/components/responses/Error'}
         '409': {$ref: '#/components/responses/Error'}
         '422': {$ref: '#/components/responses/Error'}
+        '503': {$ref: '#/components/responses/Error'}
     get:
       summary: Starea unei facturi, cu link PDF nou
       parameters:
@@ -118,10 +119,10 @@ components:
         Codul fiscal: {type: string, description: CUI-ul emitentului. Opțional cu cheia unei firme}
         serie_factura: {type: string, maxLength: 20, pattern: '^[A-Za-z0-9\-/]+$'}
         numar_facura: {type: integer, description: Lipsește - următorul număr din serie}
-        data_factura: {type: string, format: date}
+        data_factura: {type: string, format: date, description: Cel mult 90 de zile în urmă}
         scadenta_date: {type: string, format: date}
         currency_name: {type: string, default: RON}
-        external_id: {type: string, maxLength: 64, description: Id-ul din programul tău; previne dublurile}
+        external_id: {type: string, maxLength: 64, pattern: '^[A-Za-z0-9._:-]+$', description: Id-ul din programul tău; previne dublurile}
         customer_name: {type: string}
         customer_cui: {type: string, description: Gol pentru persoane fizice}
         customer_reg_com: {type: string, maxLength: 20}
@@ -130,7 +131,7 @@ components:
         customer_jud: {type: string}
         customer_country: {type: string, description: Cod ISO cu 2 litere sau numele țării. Implicit România}
         customer_postcode: {type: string}
-        customer_email: {type: string}
+        customer_email: {type: string, format: email}
         customer_telephone: {type: string, maxLength: 20}
         pret_fara_tva: {type: boolean, default: false}
         mentiuni: {type: string, maxLength: 1000}

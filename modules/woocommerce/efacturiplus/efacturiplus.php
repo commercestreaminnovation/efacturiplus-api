@@ -3,7 +3,7 @@
  * Plugin Name:       eFacturiPlus for WooCommerce
  * Plugin URI:        https://www.efacturiplus.ro/app/site/facturare-woocommerce
  * Description:       Issues invoices in eFacturiPlus from WooCommerce orders and sends them to Romania's e-Factura system (SPV).
- * Version:           3.0.0
+ * Version:           3.0.1
  * Requires at least: 6.2
  * Requires PHP:      7.4
  * Requires Plugins:  woocommerce
@@ -20,7 +20,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'EFACTURIPLUS_VERSION', '3.0.0' );
+define( 'EFACTURIPLUS_VERSION', '3.0.1' );
 define( 'EFACTURIPLUS_FILE', __FILE__ );
 
 require_once __DIR__ . '/includes/class-efacturiplus-client.php';

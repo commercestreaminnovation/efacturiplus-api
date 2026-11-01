@@ -137,7 +137,7 @@ class EfacturiplusMapper
         $regCom = trim((string) $a->other);
         $regCom = preg_match('/^[JFC]\s*\d/i', $regCom) ? $regCom : (string) $a->dni;
 
-        return [
+        $fields = [
             'customer_name' => Tools::substr($cui !== '' && $a->company ? $a->company : $person, 0, 255),
             'customer_cui' => Tools::substr($cui, 0, 20),
             'customer_reg_com' => Tools::substr($regCom, 0, 20),
@@ -149,5 +149,16 @@ class EfacturiplusMapper
             'customer_email' => Tools::substr((string) $customer->email, 0, 100),
             'customer_telephone' => Tools::substr((string) ($a->phone ?: $a->phone_mobile), 0, 20),
         ];
+
+        // Address fields come from anonymous visitors.
+        foreach ($fields as $name => $value) {
+            $fields[$name] = trim(strip_tags((string) $value));
+        }
+        $fields['customer_cui'] = (string) preg_replace('/[^A-Z0-9 \-]/', '', $fields['customer_cui']);
+        if (!Validate::isEmail($fields['customer_email'])) {
+            $fields['customer_email'] = '';
+        }
+
+        return $fields;
     }
 }

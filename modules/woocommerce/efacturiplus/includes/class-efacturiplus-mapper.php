@@ -153,7 +153,7 @@ class EFacturiPlus_Mapper {
 		$state   = $order->get_billing_state();
 		$states  = WC()->countries ? WC()->countries->get_states( $country ) : array();
 
-		return array(
+		$fields = array(
 			'customer_name'      => mb_substr( '' !== $cui && '' !== $company ? $company : $person, 0, 255 ),
 			'customer_cui'       => mb_substr( $cui, 0, 20 ),
 			'customer_reg_com'   => mb_substr( EFacturiPlus_Checkout::meta( $order, 'reg_com' ), 0, 20 ),
@@ -165,5 +165,13 @@ class EFacturiPlus_Mapper {
 			'customer_email'     => mb_substr( $order->get_billing_email(), 0, 100 ),
 			'customer_telephone' => mb_substr( $order->get_billing_phone(), 0, 20 ),
 		);
+
+		// Checkout values come from anonymous visitors.
+		$fields = array_map( 'sanitize_text_field', $fields );
+		if ( ! is_email( $fields['customer_email'] ) ) {
+			$fields['customer_email'] = '';
+		}
+		$fields['customer_cui'] = (string) preg_replace( '/[^A-Z0-9 \-]/', '', $fields['customer_cui'] );
+		return $fields;
 	}
 }

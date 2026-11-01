@@ -45,7 +45,9 @@ Adresa de bază: `https://www.efacturiplus.ro/app/api/parteneri/v1`
 | Serie | Dacă nu există, se creează la prima factură |
 | Cote TVA | 21 și 11 din 01.08.2025; 0 doar pentru neplătitori |
 | SPV | `POST /facturi/{id}/spv` sau trimitere automată, pornită din Integrări. **Trimiterea la ANAF nu se poate retrage** |
-| Limită | 600 de cereri pe minut |
+| Date | Factura nu poate fi mai veche de 90 de zile; totalul nu poate fi negativ (stornarea are rută proprie) |
+| Texte | Marcajul HTML se scoate din nume, adrese și mențiuni |
+| Limită | 600 de cereri pe minut pentru fiecare cheie |
 
 ## Erori
 
@@ -59,12 +61,17 @@ Răspunsurile de eroare au `success: false`, `code` (stabil) și `message` (pent
 | 404 | `not_found`, `company_not_found` | |
 | 409 | `saved_as_draft`, `not_stornable`, `draft`, `cancelled` | Vezi `message` |
 | 422 | `invalid`, `invalid_vat`, `date_order` | Corectează datele; nimic nu s-a scris |
+| 503 | `busy` | Altă cerere pentru aceeași firmă e în lucru; reîncearcă |
 
 ## Webhook
 
-Dacă treci o adresă `https://` la crearea cheii, primești `POST` când se schimbă starea unei facturi (`factura.actualizata`).
+Dacă treci o adresă `https://` publică, pe portul 443, la crearea cheii, primești `POST` când se schimbă starea unei facturi (`factura.actualizata`).
 Antetul `X-Signature: t=<unix>,v1=<hex>`, unde `v1 = HMAC-SHA256(secret, "<t>.<corpul cererii>")`.
 Răspunde cu 2xx. Altfel reîncercăm de până la 10 ori. Același `id` poate veni de două ori. Exemplu de verificare: [`examples/webhook.php`](examples/webhook.php).
+
+## Securitate
+
+Raportează vulnerabilitățile conform [SECURITY.md](SECURITY.md), nu într-un Issue public.
 
 ## Licențe
 

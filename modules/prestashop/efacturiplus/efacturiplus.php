@@ -24,7 +24,7 @@ class Efacturiplus extends Module
     {
         $this->name = 'efacturiplus';
         $this->tab = 'billing_invoicing';
-        $this->version = '3.0.0';
+        $this->version = '3.0.1';
         $this->author = 'CommerceStream Innovate SRL';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -261,18 +261,27 @@ class Efacturiplus extends Module
     {
         $task = (string) Tools::getValue('efacturiplus_task');
         $idOrder = (int) Tools::getValue('id_order');
-        if ($task !== '' && $idOrder > 0) {
+        if (in_array($task, ['issue', 'storno', 'spv', 'spv_storno', 'refresh', 'pdf'], true) && $idOrder > 0) {
+            if (!$this->context->employee->can('edit', 'AdminOrders')) {
+                return $this->displayError($this->l('Nu ai dreptul să faci această acțiune.'));
+            }
             $this->runTask($task, $idOrder);
             Tools::redirectAdmin($this->context->link->getAdminLink('AdminOrders', true, [], ['id_order' => $idOrder, 'vieworder' => 1]));
         }
 
         $output = '';
         if (Tools::isSubmit('submitEfacturiplus')) {
-            Configuration::updateValue('EFACTURIPLUS_API_KEY', trim((string) Tools::getValue('EFACTURIPLUS_API_KEY')));
+            // The saved key is never printed: an empty field keeps it, and only a well-formed key replaces it.
+            $key = trim((string) Tools::getValue('EFACTURIPLUS_API_KEY'));
+            if (preg_match('/^efp_[0-9a-f]{48}$/', $key)) {
+                Configuration::updateValue('EFACTURIPLUS_API_KEY', $key);
+            } elseif ($key !== '') {
+                $output .= $this->displayError($this->l('Cheia API nu are formatul corect.'));
+            }
             $series = preg_replace('/[^A-Za-z0-9\-\/]/', '', (string) Tools::getValue('EFACTURIPLUS_SERIES'));
             Configuration::updateValue('EFACTURIPLUS_SERIES', $series === '' ? 'WEB' : substr($series, 0, 20));
             Configuration::updateValue('EFACTURIPLUS_ORDER_STATE', (int) Tools::getValue('EFACTURIPLUS_ORDER_STATE'));
-            Configuration::updateValue('EFACTURIPLUS_DEFAULT_VAT', (int) Tools::getValue('EFACTURIPLUS_DEFAULT_VAT'));
+            Configuration::updateValue('EFACTURIPLUS_DEFAULT_VAT', in_array((int) Tools::getValue('EFACTURIPLUS_DEFAULT_VAT'), [21, 11], true) ? (int) Tools::getValue('EFACTURIPLUS_DEFAULT_VAT') : 21);
             Configuration::updateValue('EFACTURIPLUS_UNIT', pSQL((string) Tools::getValue('EFACTURIPLUS_UNIT')));
             Configuration::updateValue('EFACTURIPLUS_SHIPPING_NAME', pSQL((string) Tools::getValue('EFACTURIPLUS_SHIPPING_NAME')));
             Configuration::updateValue('EFACTURIPLUS_DISCOUNT_NAME', pSQL((string) Tools::getValue('EFACTURIPLUS_DISCOUNT_NAME')));
@@ -311,7 +320,7 @@ class Efacturiplus extends Module
         $fields = ['form' => [
             'legend' => ['title' => 'eFacturiPlus', 'icon' => 'icon-cogs'],
             'input' => [
-                ['type' => 'text', 'label' => $this->l('Cheia API'), 'name' => 'EFACTURIPLUS_API_KEY', 'required' => true, 'class' => 'fixed-width-xxl'],
+                ['type' => 'password', 'label' => $this->l('Cheia API'), 'name' => 'EFACTURIPLUS_API_KEY', 'class' => 'fixed-width-xxl', 'desc' => $this->l('Completează doar ca să o schimbi.')],
                 ['type' => 'text', 'label' => $this->l('Seria facturilor'), 'name' => 'EFACTURIPLUS_SERIES', 'class' => 'fixed-width-sm', 'desc' => $this->l('Dacă seria nu există în cont, se creează la prima factură.')],
                 ['type' => 'select', 'label' => $this->l('Emite factura la starea'), 'name' => 'EFACTURIPLUS_ORDER_STATE', 'options' => ['query' => array_merge([['id_order_state' => 0, 'name' => $this->l('doar manual, din comandă')]], OrderState::getOrderStates((int) $this->context->language->id)), 'id' => 'id_order_state', 'name' => 'name']],
                 ['type' => 'text', 'label' => $this->l('Cota TVA implicită'), 'name' => 'EFACTURIPLUS_DEFAULT_VAT', 'class' => 'fixed-width-xs', 'suffix' => '%', 'desc' => $this->l('Pentru comenzile fără taxe calculate în magazin, cu prețuri care conțin deja TVA.')],
@@ -330,7 +339,7 @@ class Efacturiplus extends Module
         $helper->token = Tools::getAdminTokenLite('AdminModules');
         $helper->currentIndex = AdminController::$currentIndex . '&configure=' . $this->name;
         foreach (self::CONFIG_KEYS as $key) {
-            $helper->fields_value[$key] = Configuration::get($key);
+            $helper->fields_value[$key] = $key === 'EFACTURIPLUS_API_KEY' ? '' : Configuration::get($key);
         }
 
         return $helper->generateForm([$fields]);

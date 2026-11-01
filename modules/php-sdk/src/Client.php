@@ -40,11 +40,17 @@ class Client
 
     private function request(string $method, string $path, ?array $body = null): array
     {
+        if (! str_starts_with($this->baseUrl, 'https://') && ! preg_match('#^http://(127\.0\.0\.1|localhost)(:|/)#', $this->baseUrl)) {
+            throw new ApiException('Adresa API trebuie să fie https: cheia nu se trimite necriptat.', 0);
+        }
         $ch = curl_init(rtrim($this->baseUrl, '/').$path);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CUSTOMREQUEST => $method,
             CURLOPT_TIMEOUT => $this->timeout,
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_HTTPHEADER => ['X-Api-Key: '.$this->apiKey, 'Accept: application/json', 'Content-Type: application/json', 'User-Agent: efacturiplus-php/1.0'],
         ]);
         if ($body !== null) {

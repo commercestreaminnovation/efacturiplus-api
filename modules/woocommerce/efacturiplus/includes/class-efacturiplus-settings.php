@@ -18,6 +18,12 @@ class EFacturiPlus_Settings {
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ), 60 );
 		add_action( 'admin_init', array( __CLASS__, 'register' ) );
+		add_filter(
+			'option_page_capability_efacturiplus',
+			static function () {
+				return 'manage_woocommerce';
+			}
+		);
 		add_filter( 'plugin_action_links_' . plugin_basename( EFACTURIPLUS_FILE ), array( __CLASS__, 'action_links' ) );
 	}
 
@@ -44,14 +50,31 @@ class EFacturiPlus_Settings {
 	 */
 	public static function register() {
 		$text = array( 'sanitize_callback' => 'sanitize_text_field' );
-		register_setting( 'efacturiplus', 'efacturiplus_api_key', $text );
+		register_setting( 'efacturiplus', 'efacturiplus_api_key', array( 'sanitize_callback' => array( __CLASS__, 'sanitize_key_value' ) ) );
 		register_setting( 'efacturiplus', 'efacturiplus_series', array( 'sanitize_callback' => array( __CLASS__, 'sanitize_series' ) ) );
 		register_setting( 'efacturiplus', 'efacturiplus_trigger_status', array( 'sanitize_callback' => array( __CLASS__, 'sanitize_status' ) ) );
-		register_setting( 'efacturiplus', 'efacturiplus_default_vat', array( 'sanitize_callback' => 'absint' ) );
+		register_setting( 'efacturiplus', 'efacturiplus_default_vat', array( 'sanitize_callback' => array( __CLASS__, 'sanitize_vat' ) ) );
 		register_setting( 'efacturiplus', 'efacturiplus_unit', $text );
 		register_setting( 'efacturiplus', 'efacturiplus_shipping_name', $text );
 		register_setting( 'efacturiplus', 'efacturiplus_send_spv', array( 'sanitize_callback' => array( __CLASS__, 'sanitize_yes' ) ) );
 		register_setting( 'efacturiplus', 'efacturiplus_auto_storno', array( 'sanitize_callback' => array( __CLASS__, 'sanitize_yes' ) ) );
+	}
+
+	/**
+	 * The saved key is never printed in the page: an empty field keeps it, and only a well-formed key replaces it.
+	 *
+	 * @param string $value Value.
+	 * @return string
+	 */
+	public static function sanitize_key_value( $value ) {
+		$value = trim( sanitize_text_field( (string) $value ) );
+		if ( preg_match( '/^efp_[0-9a-f]{48}$/', $value ) ) {
+			return $value;
+		}
+		if ( '' !== $value ) {
+			add_settings_error( 'efacturiplus_api_key', 'efacturiplus_bad_key', __( 'Cheia API nu are formatul corect.', 'efacturiplus' ) );
+		}
+		return (string) get_option( 'efacturiplus_api_key', '' );
 	}
 
 	/**
@@ -63,6 +86,16 @@ class EFacturiPlus_Settings {
 	public static function sanitize_series( $value ) {
 		$value = (string) preg_replace( '/[^A-Za-z0-9\-\/]/', '', (string) $value );
 		return '' === $value ? 'WEB' : substr( $value, 0, 20 );
+	}
+
+	/**
+	 * Default VAT rate: only rates that exist.
+	 *
+	 * @param mixed $value Value.
+	 * @return int
+	 */
+	public static function sanitize_vat( $value ) {
+		return in_array( (int) $value, array( 21, 11 ), true ) ? (int) $value : 21;
 	}
 
 	/**
@@ -140,7 +173,7 @@ class EFacturiPlus_Settings {
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="efacturiplus_api_key"><?php esc_html_e( 'Cheia API', 'efacturiplus' ); ?></label></th>
-						<td><input type="password" autocomplete="off" class="regular-text" id="efacturiplus_api_key" name="efacturiplus_api_key" value="<?php echo esc_attr( get_option( 'efacturiplus_api_key', '' ) ); ?>"></td>
+						<td><input type="password" autocomplete="new-password" class="regular-text" id="efacturiplus_api_key" name="efacturiplus_api_key" value="" placeholder="<?php echo '' === get_option( 'efacturiplus_api_key', '' ) ? '' : esc_attr__( 'Salvată. Completează doar ca să o schimbi.', 'efacturiplus' ); ?>"></td>
 					</tr>
 					<tr>
 						<th scope="row"><label for="efacturiplus_series"><?php esc_html_e( 'Seria facturilor', 'efacturiplus' ); ?></label></th>
