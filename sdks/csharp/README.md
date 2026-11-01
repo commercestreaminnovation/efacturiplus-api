@@ -41,6 +41,9 @@ Opțiuni: `new Client(key, baseUrl, TimeSpan.FromSeconds(25), retries: 3)`.
 | Emite o factură | `CreateInvoiceAsync(invoice)` |
 | Citește o factură | `GetInvoiceAsync(id)` |
 | Caută după serie și număr | `FindInvoiceAsync(serie, numar, cui)` |
+| Lista facturilor | `ListInvoicesAsync(filters)` |
+| Clienții firmei | `ListCustomersAsync(filters)` |
+| Articolele firmei | `ListProductsAsync(filters)` |
 | Pune în coada SPV | `SendToSpvAsync(id)` |
 | Stornează | `StornoAsync(id)` |
 | Descarcă PDF | `DownloadPdfAsync(url)` |

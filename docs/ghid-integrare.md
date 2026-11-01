@@ -19,6 +19,8 @@ La plata unei comenzi:
 
 Plătitorii de TVA folosesc cotele valabile la data facturii. Neplătitorii trimit `cota_tva: 0`.
 
+Pentru export, livrări în UE sau alte scutiri trimite `scutire_tva` și `cota_tva: 0`: vezi [referința](referinta-api.md).
+
 Reducerile sunt linii cu `quantity` negativă și `price` pozitiv.
 
 ## 3. Trimiterea în SPV

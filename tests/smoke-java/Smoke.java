@@ -46,6 +46,12 @@ public class Smoke {
         ok(!EFacturiPlus.verifyWebhook(body, "gunoi", "whsec_test"), "webhook format");
         ok(((Number) new EFacturiPlus("k", mock + "/retry", t, 3).account().get("attempts")).intValue() >= 3, "reincercare");
         raises(() -> new EFacturiPlus("k", mock + "/redir", t, 3).account(), e -> true, "redirect");
+        ok(((Number) c.listInvoices(Map.of("per_pagina", "5")).get("total")).intValue() >= 1, "lista");
+        ok(c.listCustomers(Map.of("cauta", "Neil")).containsKey("customers"), "clienti");
+        ok(c.listProducts(Map.of()).containsKey("products"), "produse");
+        Map<String, Object> ex = inv(S + "-" + run + "-3");
+        ex.put("scutire_tva", "export"); ex.put("pret_fara_tva", true); ex.put("products", List.of(Map.of("name", "Marfa", "quantity", 1, "price", 100, "cota_tva", 0)));
+        ok(((Number) o(c.createInvoice(ex).get("invoice")).get("tva")).doubleValue() == 0, "export");
         System.out.println("OK " + n);
     }
 }

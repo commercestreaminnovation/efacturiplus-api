@@ -3,7 +3,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 export const DEFAULT_URL = 'https://www.efacturiplus.ro/app/api/parteneri/v1';
-export const VERSION = '1.0.0';
+export const VERSION = '1.1.0';
 
 export class ApiError extends Error {
   constructor(message, status = 0, code = null, body = {}) {
@@ -43,6 +43,12 @@ export class Client {
     const query = new URLSearchParams({ serie, numar: String(numar), ...(cui ? { cui } : {}) });
     return this.#request('GET', `/facturi?${query}`);
   }
+
+  listInvoices(filters = {}) { return this.#request('GET', `/facturi/lista?${new URLSearchParams(filters)}`); }
+
+  listCustomers(filters = {}) { return this.#request('GET', `/clienti?${new URLSearchParams(filters)}`); }
+
+  listProducts(filters = {}) { return this.#request('GET', `/produse?${new URLSearchParams(filters)}`); }
 
   sendToSpv(invoiceId) { return this.#request('POST', `/facturi/${Number(invoiceId)}/spv`, {}); }
 

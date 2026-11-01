@@ -23,7 +23,7 @@ import javax.crypto.spec.SecretKeySpec;
 /** Client pentru API-ul public eFacturiPlus. Java 11+, fara dependente: un singur fisier. */
 public final class EFacturiPlus {
     public static final String DEFAULT_URL = "https://www.efacturiplus.ro/app/api/parteneri/v1";
-    public static final String VERSION = "1.0.0";
+    public static final String VERSION = "1.1.0";
 
     /** Raspuns de eroare. code e stabil, pentru program; mesajul e pentru oameni. */
     public static final class ApiException extends RuntimeException {
@@ -81,6 +81,21 @@ public final class EFacturiPlus {
     /** Cauta dupa serie si numar. cui e obligatoriu doar pentru cheile de partener; altfel null. */
     public Map<String, Object> findInvoice(String serie, long numar, String cui) {
         return request("GET", "/facturi?serie=" + encode(serie) + "&numar=" + numar + (cui == null ? "" : "&cui=" + encode(cui)), null);
+    }
+
+    /** Filtre: de_la, pana_la, pagina, per_pagina; cui pentru cheile de partener. */
+    public Map<String, Object> listInvoices(Map<String, String> filters) {
+        return request("GET", "/facturi/lista" + query(filters), null);
+    }
+
+    /** Filtre: cauta, pagina, per_pagina. */
+    public Map<String, Object> listCustomers(Map<String, String> filters) {
+        return request("GET", "/clienti" + query(filters), null);
+    }
+
+    /** Filtre: cauta, pagina, per_pagina. */
+    public Map<String, Object> listProducts(Map<String, String> filters) {
+        return request("GET", "/produse" + query(filters), null);
     }
 
     /** Pune factura in coada SPV. Trimiterea la ANAF nu se poate retrage. */
@@ -191,6 +206,14 @@ public final class EFacturiPlus {
             b.header("X-Api-Key", apiKey);
         }
         return b.method(method, body == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(Json.write(body))).build();
+    }
+
+    private static String query(Map<String, String> filters) {
+        StringBuilder out = new StringBuilder();
+        for (Map.Entry<String, String> f : filters.entrySet()) {
+            out.append(out.length() == 0 ? '?' : '&').append(encode(f.getKey())).append('=').append(encode(f.getValue()));
+        }
+        return out.toString();
     }
 
     private static long backoff(int attempt) {

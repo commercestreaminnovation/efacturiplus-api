@@ -76,5 +76,15 @@ func main() {
 	m, _ = efp.NewWithURL("k", mock+"/redir")
 	_, err = m.Account(ctx)
 	ok(err != nil, "redirect")
+	r, err = c.ListInvoices(ctx, map[string]string{"per_pagina": "5"})
+	ok(err == nil && f(r["total"]) >= 1, "lista")
+	r, err = c.ListCustomers(ctx, map[string]string{"cauta": "Neil"})
+	ok(err == nil && r["customers"] != nil, "clienti")
+	r, err = c.ListProducts(ctx, nil)
+	ok(err == nil && r["success"] == true, "produse")
+	ex := inv(S + "-" + run + "-3")
+	ex["scutire_tva"], ex["pret_fara_tva"], ex["products"] = "export", true, []efp.M{{"name": "Marfa", "quantity": 1, "price": 100, "cota_tva": 0}}
+	r, err = c.CreateInvoice(ctx, ex)
+	ok(err == nil && f(r["invoice"].(efp.M)["tva"]) == 0, "export")
 	fmt.Println("OK", n)
 }

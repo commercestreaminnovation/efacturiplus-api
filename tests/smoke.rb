@@ -26,4 +26,6 @@ ok(!EFacturiPlus.verify_webhook(body, sig, 'whsec_test', now: 1730009999), 'webh
 ok(!EFacturiPlus.verify_webhook(body, 'gunoi', 'whsec_test'), 'webhook format')
 ok(Client.new('k', base_url: "#{mock}/retry").account['attempts'] >= 3, 'reincercare')
 raises('redirect') { Client.new('k', base_url: "#{mock}/redir").account }
+ok(c.list_invoices(per_pagina: 5)['total'] >= 1, 'lista'); ok(c.list_customers(cauta: 'Neil').key?('customers'), 'clienti'); ok(c.list_products.key?('products'), 'produse')
+e3 = c.create_invoice(inv.("#{S}-#{run}-3").merge(scutire_tva: 'export', pret_fara_tva: true, products: [{ name: 'Marfa', quantity: 1, price: 100, cota_tva: 0 }])); ok(e3['invoice']['tva'].to_f == 0, 'export')
 puts "OK #{$n}"

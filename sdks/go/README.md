@@ -53,6 +53,9 @@ Adresă locală: `efp.NewWithURL(key, url)`. Timpul maxim se schimbă din `clien
 | Emite o factură | `CreateInvoice(ctx, invoice)` |
 | Citește o factură | `GetInvoice(ctx, id)` |
 | Caută după serie și număr | `FindInvoice(ctx, serie, numar, cui)` |
+| Lista facturilor | `ListInvoices(ctx, filters)` |
+| Clienții firmei | `ListCustomers(ctx, filters)` |
+| Articolele firmei | `ListProducts(ctx, filters)` |
 | Pune în coada SPV | `SendToSpv(ctx, id)` |
 | Stornează | `Storno(ctx, id)` |
 | Descarcă PDF | `DownloadPDF(ctx, url)` |

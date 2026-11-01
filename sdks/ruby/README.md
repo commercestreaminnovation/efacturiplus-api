@@ -40,6 +40,9 @@ Opțiuni: `Client.new(key, base_url: ..., timeout: 25, retries: 3)`.
 | Emite o factură | `create_invoice(invoice)` |
 | Citește o factură | `get_invoice(id)` |
 | Caută după serie și număr | `find_invoice(serie, numar, cui:)` |
+| Lista facturilor | `list_invoices(**filters)` |
+| Clienții firmei | `list_customers(**filters)` |
+| Articolele firmei | `list_products(**filters)` |
 | Pune în coada SPV | `send_to_spv(id)` |
 | Stornează | `storno(id)` |
 | Descarcă PDF | `download_pdf(url)` |

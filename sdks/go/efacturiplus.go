@@ -22,7 +22,7 @@ import (
 
 const (
 	DefaultURL = "https://www.efacturiplus.ro/app/api/parteneri/v1"
-	Version    = "1.0.0"
+	Version    = "1.1.0"
 )
 
 // M e un obiect JSON: datele trimise si raspunsurile.
@@ -87,6 +87,29 @@ func (c *Client) FindInvoice(ctx context.Context, serie string, numar int64, cui
 		q.Set("cui", cui)
 	}
 	return c.request(ctx, "GET", "/facturi?"+q.Encode(), nil)
+}
+
+func query(filters map[string]string) string {
+	q := url.Values{}
+	for k, v := range filters {
+		q.Set(k, v)
+	}
+	return q.Encode()
+}
+
+// ListInvoices cu filtrele de_la, pana_la, pagina, per_pagina; cui pentru cheile de partener.
+func (c *Client) ListInvoices(ctx context.Context, filters map[string]string) (M, error) {
+	return c.request(ctx, "GET", "/facturi/lista?"+query(filters), nil)
+}
+
+// ListCustomers cu filtrele cauta, pagina, per_pagina.
+func (c *Client) ListCustomers(ctx context.Context, filters map[string]string) (M, error) {
+	return c.request(ctx, "GET", "/clienti?"+query(filters), nil)
+}
+
+// ListProducts cu filtrele cauta, pagina, per_pagina.
+func (c *Client) ListProducts(ctx context.Context, filters map[string]string) (M, error) {
+	return c.request(ctx, "GET", "/produse?"+query(filters), nil)
 }
 
 // SendToSpv pune factura in coada SPV. Trimiterea la ANAF nu se poate retrage.

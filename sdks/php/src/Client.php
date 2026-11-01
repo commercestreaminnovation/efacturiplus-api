@@ -7,7 +7,7 @@ class Client
 {
     public const DEFAULT_URL = 'https://www.efacturiplus.ro/app/api/parteneri/v1';
 
-    public const VERSION = '1.0.0';
+    public const VERSION = '1.1.0';
 
     private string $baseUrl;
 
@@ -45,6 +45,24 @@ class Client
     public function findInvoice(string $serie, int $numar, ?string $cui = null): array
     {
         return $this->request('GET', '/facturi?'.http_build_query(array_filter(['serie' => $serie, 'numar' => $numar, 'cui' => $cui])));
+    }
+
+    /** Lista facturilor. Filtre: de_la, pana_la, pagina, per_pagina; `cui` pentru cheile de partener. */
+    public function listInvoices(array $filters = []): array
+    {
+        return $this->request('GET', '/facturi/lista?'.http_build_query($filters));
+    }
+
+    /** Clientii firmei cheii. Filtre: cauta, pagina, per_pagina. */
+    public function listCustomers(array $filters = []): array
+    {
+        return $this->request('GET', '/clienti?'.http_build_query($filters));
+    }
+
+    /** Articolele firmei cheii. Filtre: cauta, pagina, per_pagina. */
+    public function listProducts(array $filters = []): array
+    {
+        return $this->request('GET', '/produse?'.http_build_query($filters));
     }
 
     /** Pune factura in coada SPV. Trimiterea la ANAF nu se poate retrage. */

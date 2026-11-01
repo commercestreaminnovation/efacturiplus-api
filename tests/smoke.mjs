@@ -24,4 +24,6 @@ ok(!verifyWebhook(body, sig, 'whsec_test', { now: 1730009999 }), 'webhook expira
 ok(!verifyWebhook(body, 'gunoi', 'whsec_test'), 'webhook format');
 ok((await new Client('k', { baseUrl: mock + '/retry' }).account()).attempts >= 3, 'reincercare');
 await raises(() => new Client('k', { baseUrl: mock + '/redir' }).account(), () => true, 'redirect');
+ok((await c.listInvoices({ per_pagina: 5 })).total >= 1, 'lista'); ok((await c.listCustomers({ cauta: 'Neil' })).customers, 'clienti'); ok((await c.listProducts()).products, 'produse');
+const e3 = await c.createInvoice({ ...inv(S + '-' + run + '-3'), scutire_tva: 'export', pret_fara_tva: true, products: [{ name: 'Marfa', quantity: 1, price: 100, cota_tva: 0 }] }); ok(e3.invoice.tva == 0, 'export');
 console.log('OK ' + n);

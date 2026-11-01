@@ -29,7 +29,7 @@ public class ApiException : Exception
 public sealed class Client : IDisposable
 {
     public const string DefaultUrl = "https://www.efacturiplus.ro/app/api/parteneri/v1";
-    public const string Version = "1.0.0";
+    public const string Version = "1.1.0";
 
     private readonly string _apiKey;
     private readonly string _baseUrl;
@@ -58,6 +58,15 @@ public sealed class Client : IDisposable
     /// <summary>Cauta dupa serie si numar. cui e obligatoriu doar pentru cheile de partener.</summary>
     public Task<JsonNode> FindInvoiceAsync(string serie, long numar, string? cui = null, CancellationToken ct = default) =>
         RequestAsync(HttpMethod.Get, $"/facturi?serie={Uri.EscapeDataString(serie)}&numar={numar}" + (cui is null ? "" : $"&cui={Uri.EscapeDataString(cui)}"), null, ct);
+
+    /// <summary>Filtre: de_la, pana_la, pagina, per_pagina; cui pentru cheile de partener.</summary>
+    public Task<JsonNode> ListInvoicesAsync(IDictionary<string, string>? filters = null, CancellationToken ct = default) => RequestAsync(HttpMethod.Get, "/facturi/lista" + Query(filters), null, ct);
+
+    /// <summary>Filtre: cauta, pagina, per_pagina.</summary>
+    public Task<JsonNode> ListCustomersAsync(IDictionary<string, string>? filters = null, CancellationToken ct = default) => RequestAsync(HttpMethod.Get, "/clienti" + Query(filters), null, ct);
+
+    /// <summary>Filtre: cauta, pagina, per_pagina.</summary>
+    public Task<JsonNode> ListProductsAsync(IDictionary<string, string>? filters = null, CancellationToken ct = default) => RequestAsync(HttpMethod.Get, "/produse" + Query(filters), null, ct);
 
     /// <summary>Pune factura in coada SPV. Trimiterea la ANAF nu se poate retrage.</summary>
     public Task<JsonNode> SendToSpvAsync(long invoiceId, CancellationToken ct = default) => RequestAsync(HttpMethod.Post, $"/facturi/{invoiceId}/spv", new { }, ct);
@@ -162,6 +171,9 @@ public sealed class Client : IDisposable
         }
         return _http.SendAsync(request, ct);
     }
+
+    private static string Query(IDictionary<string, string>? filters) =>
+        filters is null || filters.Count == 0 ? "" : "?" + string.Join("&", filters.Select(f => Uri.EscapeDataString(f.Key) + "=" + Uri.EscapeDataString(f.Value)));
 
     private static TimeSpan Backoff(int attempt, TimeSpan? retryAfter) => retryAfter ?? TimeSpan.FromMilliseconds(500 * Math.Pow(2, attempt));
 }

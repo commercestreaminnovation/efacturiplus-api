@@ -57,6 +57,9 @@ $valid = \EFacturiPlus\Client::verifyWebhook(file_get_contents('php://input'), $
 | Emite o factură | `createInvoice($invoice)` |
 | Citește o factură | `getInvoice($id)` |
 | Caută după serie și număr | `findInvoice($serie, $numar, $cui)` |
+| Lista facturilor | `listInvoices($filters)` |
+| Clienții firmei | `listCustomers($filters)` |
+| Articolele firmei | `listProducts($filters)` |
 | Pune în coada SPV | `sendToSpv($id)` |
 | Stornează | `storno($id)` |
 | Descarcă PDF | `downloadPdf($url)` |

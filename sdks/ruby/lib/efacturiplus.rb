@@ -8,7 +8,7 @@ require 'uri'
 
 module EFacturiPlus
   DEFAULT_URL = 'https://www.efacturiplus.ro/app/api/parteneri/v1'
-  VERSION = '1.0.0'
+  VERSION = '1.1.0'
 
   class ApiError < StandardError
     attr_reader :status, :code, :body
@@ -47,6 +47,9 @@ module EFacturiPlus
       request(:get, "/facturi?#{URI.encode_www_form(query)}")
     end
 
+    def list_invoices(**filters) = request(:get, "/facturi/lista?#{URI.encode_www_form(filters)}")
+    def list_customers(**filters) = request(:get, "/clienti?#{URI.encode_www_form(filters)}")
+    def list_products(**filters) = request(:get, "/produse?#{URI.encode_www_form(filters)}")
     def send_to_spv(invoice_id) = request(:post, "/facturi/#{Integer(invoice_id)}/spv", {})
     def storno(invoice_id) = request(:post, "/facturi/#{Integer(invoice_id)}/storno", {})
     def create_account(account) = request(:post, '/conturi', account)

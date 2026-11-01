@@ -26,4 +26,9 @@ Ok(!Client.VerifyWebhook(body, sig, "whsec_test", 300, 1730009999), "webhook exp
 Ok(!Client.VerifyWebhook(body, "gunoi", "whsec_test"), "webhook format");
 Ok((await new Client("k", mock + "/retry").AccountAsync())["attempts"]!.GetValue<int>() >= 3, "reincercare");
 await Raises(() => new Client("k", mock + "/redir").AccountAsync(), e => true, "redirect");
+Ok((await c.ListInvoicesAsync(new Dictionary<string, string> { ["per_pagina"] = "5" }))["total"]!.GetValue<int>() >= 1, "lista");
+Ok((await c.ListCustomersAsync(new Dictionary<string, string> { ["cauta"] = "Neil" }))["customers"] != null, "clienti");
+Ok((await c.ListProductsAsync())["products"] != null, "produse");
+var ex = (Dictionary<string, object>)Inv($"{S}-{run}-3"); ex["scutire_tva"] = "export"; ex["pret_fara_tva"] = true; ex["products"] = new[] { new Dictionary<string, object> { ["name"] = "Marfa", ["quantity"] = 1, ["price"] = 100, ["cota_tva"] = 0 } };
+Ok((await c.CreateInvoiceAsync(ex))["invoice"]!["tva"]!.GetValue<decimal>() == 0, "export");
 Console.WriteLine("OK " + n);

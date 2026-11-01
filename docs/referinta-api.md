@@ -9,6 +9,9 @@ Specificația completă, pentru generatoare de cod și Postman: [`openapi.yaml`]
 | GET | `/cont` | Firma, starea contului, SPV, serii, cote TVA | a firmei |
 | POST | `/facturi` | Creează o factură | oricare |
 | GET | `/facturi` | Citește o factură | oricare |
+| GET | `/facturi/lista` | Lista facturilor | oricare |
+| GET | `/clienti` | Clienții firmei | a firmei |
+| GET | `/produse` | Articolele firmei | a firmei |
 | POST | `/facturi/{id}/spv` | Pune factura în coada SPV | oricare |
 | POST | `/facturi/{id}/storno` | Stornează integral | oricare |
 | GET | `/facturi/{id}/pdf` | PDF, prin linkul semnat din `pdf_url` | fără |
@@ -53,6 +56,8 @@ Specificația completă, pentru generatoare de cod și Postman: [`openapi.yaml`]
 | `pret_fara_tva` | Nu | `true` dacă prețurile sunt fără TVA. Implicit sunt **cu TVA** |
 | `mentiuni` | Nu | Cel mult 1000 |
 | `draft` | Nu | `true`: rămâne proiect până îl confirmă titularul |
+| `scutire_tva` | Nu | Factură fără TVA a unui plătitor; vezi tabelul de mai jos. Toate liniile au `cota_tva: 0` |
+| `motiv_scutire` | La `alta-scutire` | Temeiul legal, cel mult 255 |
 | `products` | Da | Între 1 și 500 de linii |
 
 Linia din `products`:
@@ -65,6 +70,20 @@ Linia din `products`:
 | `cota_tva` | Nu | 21 sau 11 din 01.08.2025; 19, 9, 5 înainte; 0 pentru neplătitori |
 | `um` | Nu | Implicit `buc` |
 | `mentions` | Nu | Cel mult 255 |
+
+`scutire_tva`:
+
+| Valoare | Când |
+|---|---|
+| `export` | Bunuri expediate în afara UE (art. 294 alin. 1) |
+| `livrare-ue` | Bunuri către o firmă cu cod de TVA din alt stat UE (art. 294 alin. 2) |
+| `servicii-ue` | Servicii către firme din UE (art. 278 alin. 2) |
+| `taxare-inversa` | Taxare inversă (art. 331) |
+| `scutit-292` | Scutit fără drept de deducere (art. 292) |
+| `neimpozabil` | Nu face obiectul TVA în România |
+| `alta-scutire` | Altă scutire; temeiul în `motiv_scutire` |
+
+Alegerea scutirii corecte rămâne a emitentului. Neplătitorii de TVA nu trimit acest câmp, doar `cota_tva: 0`.
 
 Marcajul HTML se scoate din texte. Totalul facturii nu poate fi negativ.
 
@@ -90,7 +109,17 @@ Dacă factura există deja: `200`, cu `duplicate: true` și aceleași câmpuri.
 
 Cu `?invoice_id=60123` sau `?serie=WEB&numar=17`. Cu o cheie de partener se adaugă `&cui=...`. Răspunsul e același ca la creare. Se văd doar facturile trimise prin aceeași cheie sau cele fără partener ale firmei cheii.
 
-Nu există încă listare de facturi, clienți sau produse prin API.
+## GET /facturi/lista
+
+Facturile emise, cele mai noi primele. Filtre: `de_la`, `pana_la` (`YYYY-MM-DD`), `pagina`, `per_pagina` (maximum 100, implicit 50). Cheia unei firme vede facturile firmei, fără cele trimise de parteneri. Cheia unui partener trimite și `cui` și vede doar facturile trimise de ea.
+
+```json
+{"success": true, "page": 1, "per_page": 50, "total": 120, "invoices": [{"invoice_id": 60123, "invoice": {"label": "WEB17"}, "efactura_status": "acceptata", "pdf_url": "..."}]}
+```
+
+## GET /clienti și GET /produse
+
+Doar cu cheia unei firme, doar citire. Filtre: `cauta` (nume, CUI sau cod), `pagina`, `per_pagina`. Răspund cu `customers`, respectiv `products`, plus `page`, `per_page`, `total`.
 
 ## POST /facturi/{id}/spv
 

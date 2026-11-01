@@ -9,7 +9,7 @@ import urllib.parse
 import urllib.request
 
 DEFAULT_URL = 'https://www.efacturiplus.ro/app/api/parteneri/v1'
-VERSION = '1.0.0'
+VERSION = '1.1.0'
 __all__ = ['Client', 'ApiError', 'verify_webhook', 'DEFAULT_URL']
 
 
@@ -61,6 +61,18 @@ class Client:
         if cui:
             query['cui'] = cui
         return self._request('GET', '/facturi?' + urllib.parse.urlencode(query))
+
+    def list_invoices(self, **filters):
+        """Filtre: de_la, pana_la, pagina, per_pagina; cui pentru cheile de partener."""
+        return self._request('GET', '/facturi/lista?' + urllib.parse.urlencode(filters))
+
+    def list_customers(self, **filters):
+        """Filtre: cauta, pagina, per_pagina."""
+        return self._request('GET', '/clienti?' + urllib.parse.urlencode(filters))
+
+    def list_products(self, **filters):
+        """Filtre: cauta, pagina, per_pagina."""
+        return self._request('GET', '/produse?' + urllib.parse.urlencode(filters))
 
     def send_to_spv(self, invoice_id):
         """Pune factura in coada SPV. Trimiterea la ANAF nu se poate retrage."""

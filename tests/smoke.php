@@ -25,4 +25,6 @@ $ok(!Client::verifyWebhook($body,$sig,'whsec_test',300,1730009999),'webhook expi
 $ok(!Client::verifyWebhook($body,'gunoi','whsec_test'),'webhook format');
 $ok((new Client('k',"$mock/retry"))->account()['attempts']>=3,'reincercare');
 try{(new Client('k',"$mock/redir"))->account();$ok(false,'redirect');}catch(ApiException $e){$n++;}
+$ok($c->listInvoices(['per_pagina'=>5])['total']>=1,'lista');$ok(isset($c->listCustomers(['cauta'=>'Neil'])['customers']),'clienti');$ok(isset($c->listProducts()['products']),'produse');
+$e=$c->createInvoice(['scutire_tva'=>'export','pret_fara_tva'=>true,'products'=>[['name'=>'Marfa','quantity'=>1,'price'=>100,'cota_tva'=>0]]]+$inv("$S-$run-3"));$ok($e['invoice']['tva']==0,'export');
 echo "OK $n\n";

@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: eFacturiPlus API
-  version: 1.1.0
+  version: 1.2.0
   description: Facturare și e-Factura (SPV) în România. Documentație în docs/, biblioteci în sdks/.
   license: {name: MIT, url: https://opensource.org/licenses/MIT}
   contact: {name: eFacturiPlus, url: https://www.efacturiplus.ro}
@@ -42,6 +42,38 @@ paths:
       responses:
         '200': {description: Factura, content: {application/json: {schema: {$ref: '#/components/schemas/Invoice'}}}}
         '404': {$ref: '#/components/responses/Error'}
+  /facturi/lista:
+    get:
+      summary: Lista facturilor emise
+      parameters:
+        - {name: de_la, in: query, schema: {type: string, format: date}}
+        - {name: pana_la, in: query, schema: {type: string, format: date}}
+        - {name: pagina, in: query, schema: {type: integer, minimum: 1, default: 1}}
+        - {name: per_pagina, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 50}}
+        - {name: cui, in: query, schema: {type: string}, description: Obligatoriu pentru cheile de partener}
+      responses:
+        '200': {description: Pagina de facturi, content: {application/json: {schema: {type: object, properties: {success: {type: boolean}, page: {type: integer}, per_page: {type: integer}, total: {type: integer}, invoices: {type: array, items: {$ref: '#/components/schemas/Invoice'}}}}}}}
+        '422': {$ref: '#/components/responses/Error'}
+  /clienti:
+    get:
+      summary: Clienții firmei cheii
+      parameters:
+        - {name: cauta, in: query, schema: {type: string}}
+        - {name: pagina, in: query, schema: {type: integer}}
+        - {name: per_pagina, in: query, schema: {type: integer, maximum: 100}}
+      responses:
+        '200': {description: Clienți, content: {application/json: {schema: {type: object, properties: {success: {type: boolean}, total: {type: integer}, customers: {type: array, items: {type: object}}}}}}}
+        '400': {$ref: '#/components/responses/Error'}
+  /produse:
+    get:
+      summary: Articolele firmei cheii
+      parameters:
+        - {name: cauta, in: query, schema: {type: string}}
+        - {name: pagina, in: query, schema: {type: integer}}
+        - {name: per_pagina, in: query, schema: {type: integer, maximum: 100}}
+      responses:
+        '200': {description: Articole, content: {application/json: {schema: {type: object, properties: {success: {type: boolean}, total: {type: integer}, products: {type: array, items: {type: object}}}}}}}
+        '400': {$ref: '#/components/responses/Error'}
   /facturi/{invoice}/spv:
     post:
       summary: Pune factura în coada de trimitere la ANAF
@@ -214,6 +246,8 @@ components:
         pret_fara_tva: {type: boolean, default: false}
         mentiuni: {type: string, maxLength: 1000}
         draft: {type: boolean, description: Rămâne proiect; titularul îl confirmă din aplicație}
+        scutire_tva: {type: string, enum: [taxare-inversa, servicii-ue, livrare-ue, export, scutit-292, neimpozabil, alta-scutire], description: Factură fără TVA a unui plătitor; cota_tva 0 pe toate liniile}
+        motiv_scutire: {type: string, maxLength: 255, description: Obligatoriu la alta-scutire}
         products: {type: array, minItems: 1, maxItems: 500, items: {$ref: '#/components/schemas/Line'}}
     Invoice:
       type: object

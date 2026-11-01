@@ -32,6 +32,8 @@ export interface InvoiceRequest {
   pret_fara_tva?: boolean;
   mentiuni?: string;
   draft?: boolean;
+  scutire_tva?: 'taxare-inversa' | 'servicii-ue' | 'livrare-ue' | 'export' | 'scutit-292' | 'neimpozabil' | 'alta-scutire';
+  motiv_scutire?: string;
 }
 
 export interface InvoiceResponse {
@@ -58,6 +60,9 @@ export class Client {
   createInvoice(invoice: InvoiceRequest): Promise<InvoiceResponse>;
   getInvoice(invoiceId: number): Promise<InvoiceResponse>;
   findInvoice(serie: string, numar: number, cui?: string | null): Promise<InvoiceResponse>;
+  listInvoices(filters?: Record<string, string | number>): Promise<any>;
+  listCustomers(filters?: Record<string, string | number>): Promise<any>;
+  listProducts(filters?: Record<string, string | number>): Promise<any>;
   sendToSpv(invoiceId: number): Promise<InvoiceResponse>;
   storno(invoiceId: number): Promise<InvoiceResponse>;
   createAccount(account: Record<string, unknown>): Promise<any>;

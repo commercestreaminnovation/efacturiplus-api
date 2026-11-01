@@ -31,4 +31,6 @@ ok(not verify_webhook(body, sig, 'whsec_test', now=1730009999), 'webhook expirat
 ok(not verify_webhook(body, 'gunoi', 'whsec_test'), 'webhook format')
 ok(Client('k', mock + '/retry').account()['attempts'] >= 3, 'reincercare')
 raises(lambda: Client('k', mock + '/redir').account(), lambda e: True, 'redirect')
+ok(c.list_invoices(per_pagina=5)['total'] >= 1, 'lista'); ok('customers' in c.list_customers(cauta='Neil'), 'clienti'); ok('products' in c.list_products(), 'produse')
+e3 = c.create_invoice({**inv(f'{S}-{run}-3'), 'scutire_tva': 'export', 'pret_fara_tva': True, 'products': [dict(name='Marfa', quantity=1, price=100, cota_tva=0)]}); ok(e3['invoice']['tva'] == 0, 'export')
 print('OK', n)
